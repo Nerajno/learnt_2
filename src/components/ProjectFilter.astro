@@ -1,0 +1,37 @@
+---
+export interface Props {
+  status?: string;
+  tag?: string;
+  difficulty?: string;
+}
+const { status = "", tag = "", difficulty = "" } = Astro.props;
+---
+
+<form method="GET" action="/learnt" class="flex flex-wrap gap-2 mb-6">
+  <select name="status" class="input-field">
+    <option value="">All Statuses</option>
+    <option value="active" selected={status === "active"}>Active</option>
+    <option value="sunset" selected={status === "sunset"}>Sunset</option>
+    <option value="archived" selected={status === "archived"}>Archived</option>
+  </select>
+  <input
+    name="tag"
+    type="text"
+    placeholder="Tag"
+    value={tag}
+    class="input-field"
+  />
+  <select name="difficulty" class="input-field">
+    <option value="">All Difficulties</option>
+    <option value="beginner" selected={difficulty === "beginner"}
+      >Beginner</option
+    >
+    <option value="intermediate" selected={difficulty === "intermediate"}
+      >Intermediate</option
+    >
+    <option value="advanced" selected={difficulty === "advanced"}
+      >Advanced</option
+    >
+  </select>
+  <button type="submit" class="btn-primary">Filter</button>
+</form>

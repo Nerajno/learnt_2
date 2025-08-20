@@ -1,0 +1,242 @@
+---
+// ADDED: Dynamic route for individual project pages
+import Layout from '../../layouts/Layout.astro';
+import { getProjectBySlug, projects } from '../../data/projects';
+import type { GetStaticPaths } from 'astro';
+
+// Generate static paths for all projects
+export const getStaticPaths: GetStaticPaths = () => {
+  return projects.map((project) => ({
+    params: { slug: project.slug },
+    props: { project },
+  }));
+};
+
+const { project } = Astro.props;
+
+if (!project) {
+  return Astro.redirect('/404');
+}
+
+// ADDED: Related projects (same tags, different project)
+const relatedProjects = projects
+  .filter(p =>
+    p.id !== project.id &&
+    p.tags.some(tag => project.tags.includes(tag))
+  )
+  .slice(0, 3);
+
+// ADDED: Format dates nicely
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+};
+
+// ADDED: Status styling
+const statusStyles = {
+  active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  sunset: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+  archived: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+};
+
+const difficultyStyles = {
+  beginner: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  intermediate: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  advanced: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+};
+---
+
+<Layout
+  title={`${project.name} - Learnt Project`}
+  description={project.short}
+  image={project.screenshot}
+>
+  <!-- Breadcrumb Navigation -->
+  <nav class="bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700" aria-label="Breadcrumb">
+    <div class="container mx-auto px-4 py-3">
+      <ol class="flex items-center space-x-2 text-sm">
+        <li>
+          <a href="/" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+            Home
+          </a>
+        </li>
+        <li class="text-gray-400 dark:text-gray-600">/</li>
+        <li>
+          <a href="/learnt" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+            Projects
+          </a>
+        </li>
+        <li class="text-gray-400 dark:text-gray-600">/</li>
+        <li class="text-gray-900 dark:text-white font-medium" aria-current="page">
+          {project.name}
+        </li>
+      </ol>
+    </div>
+  </nav>
+
+  <article class="container mx-auto px-4 py-8 max-w-4xl">
+    <!-- Project Header -->
+    <header class="mb-8">
+      <div class="flex flex-wrap gap-3 mb-4">
+        <span class={`px-3 py-1 text-sm font-medium rounded-full ${statusStyles[project.status]}`}>
+          {project.status}
+        </span>
+        {project.difficulty && (
+          <span class={`px-3 py-1 text-sm font-medium rounded-full ${difficultyStyles[project.difficulty]}`}>
+            {project.difficulty}
+          </span>
+        )}
+        {project.dateCreated && (
+          <span class="px-3 py-1 text-sm bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-full">
+            Created {formatDate(project.dateCreated)}
+          </span>
+        )}
+      </div>
+
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">
+        {project.name}
+      </h1>
+
+      <p class="text-xl text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
+        {project.short}
+      </p>
+
+      <!-- Action Buttons -->
+      <div class="flex flex-wrap gap-4">
+        <a
+          href={project.github}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn-primary inline-flex items-center gap-2"
+        >
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd"></path>
+          </svg>
+          View on GitHub
+        </a>
+        <button
+          id="share-button"
+          class="btn-secondary inline-flex items-center gap-2"
+          data-title={project.name}
+          data-url={`${Astro.site}learnt/${project.slug}`}
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+          </svg>
+          Share
+        </button>
+      </div>
+    </header>
+
+    <!-- Project Image -->
+    {project.screenshot && (
+      <div class="mb-8 rounded-xl overflow-hidden shadow-lg bg-gray-100 dark:bg-gray-800">
+        <img
+          src={project.screenshot}
+          alt={project.altText || `Screenshot of ${project.name}`}
+          class="w-full h-auto"
+          loading="lazy"
+          decoding="async"
+          onerror="this.src='/images/placeholder-project.png'; this.onerror=null;"
+        />
+      </div>
+    )}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Main Content -->
+      <div class="lg:col-span-2">
+        <!-- Project Description -->
+        <section class="prose prose-lg dark:prose-invert max-w-none mb-8">
+          <div set:html={project.long} />
+        </section>
+
+        <!-- Sunset Information -->
+        {project.sunsetDate && project.status === 'sunset' && (
+          <section class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-6 mb-8">
+            <div class="flex items-start gap-3">
+              <svg class="w-6 h-6 text-orange-500 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <div>
+                <h3 class="text-lg font-semibold text-orange-800 dark:text-orange-200 mb-2">
+                  Project Sunset
+                </h3>
+                <p class="text-orange-700 dark:text-orange-300 mb-2">
+                  This project was sunset on <strong>{formatDate(project.sunsetDate)}</strong>.
+                </p>
+                <p class="text-sm text-orange-600 dark:text-orange-400">
+                  Sunset projects have completed their learning objectives and are no longer actively maintained, but their code and learnings remain available for reference.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="space-y-6">
+        <!-- Quick Info -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Quick Info
+          </h3>
+          <dl class="space-y-3">
+            <div>
+              <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
+              <dd class={`inline-flex items-center px-2 py-1 text-sm font-medium rounded-full mt-1 ${statusStyles[project.status]}`}>
+                {project.status}
+              </dd>
+            </div>
+
+            {project.difficulty && (
+              <div>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Difficulty</dt>
+                <dd class={`inline-flex items-center px-2 py-1 text-sm font-medium rounded-full mt-1 ${difficultyStyles[project.difficulty]}`}>
+                  {project.difficulty}
+                </dd>
+              </div>
+            )}
+
+            {project.dateCreated && (
+              <div>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Created</dt>
+                <dd class="text-sm text-gray-900 dark:text-white mt-1">
+                  {formatDate(project.dateCreated)}
+                </dd>
+              </div>
+            )}
+
+            {project.sunsetDate && (
+              <div>
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Sunset</dt>
+                <dd class="text-sm text-gray-900 dark:text-white mt-1">
+                  {formatDate(project.sunsetDate)}
+                </dd>
+              </div>
+            )}
+          </dl>
+        </div>
+
+        <!-- Technologies -->
+        <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-6">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            Technologies
+          </h3>
+          <div class="flex flex-wrap gap-2">
+            {project.tags.map((tag) => (
+              <a
+                href={`/learnt?tag=${encodeURIComponent(tag)}`}
+                class="inline-block text-sm font-medium bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-3 py-1 rounded-full border border-gray-200 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 hover:border-blue-300 dark:hover:border-blue-600 transition-colors"
+              >
+                {tag}
+              </a>
+            ))}
+          </div>
+        </div>
+
+        <!-- Learning Outcomes -->
+        {project.learned.length > 0 && (
+          <div class="bg-gray-50 dark:bg-

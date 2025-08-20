@@ -1,0 +1,232 @@
+---
+// FIXED: Proper Astro component that works with SSR and client-side hydration
+export interface Props {
+  initialQuery?: string;
+  initialTag?: string;
+  placeholder?: string;
+  className?: string;
+}
+
+const {
+  initialQuery = "",
+  initialTag = "",
+  placeholder = "Search by project name, tech, or skills (e.g. 'React', 'Web Scraping')",
+  className = "",
+} = Astro.props;
+---
+
+<!-- FIXED: Use form submission instead of custom events for better SSR compatibility -->
+<div class={`w-full max-w-2xl mx-auto ${className}`}>
+  <form method="GET" action="/learnt" class="space-y-4">
+    <div class="flex flex-col sm:flex-row gap-3">
+      <!-- FIXED: Proper form inputs with better styling and accessibility -->
+      <div class="flex-1">
+        <label for="search-input" class="sr-only">Search projects</label>
+        <input
+          id="search-input"
+          name="q"
+          type="search"
+          value={initialQuery}
+          placeholder={placeholder}
+          class="w-full input-field text-sm"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+
+      <!-- ADDED: Tag filter dropdown -->
+      <div class="sm:w-48">
+        <label for="tag-select" class="sr-only">Filter by tag</label>
+        <select
+          id="tag-select"
+          name="tag"
+          class="w-full input-field text-sm bg-white dark:bg-gray-800"
+        >
+          <option value="">All Tags</option>
+          <option value="React" selected={initialTag === "React"}>React</option>
+          <option value="TypeScript" selected={initialTag === "TypeScript"}
+            >TypeScript</option
+          >
+          <option value="Node.js" selected={initialTag === "Node.js"}
+            >Node.js</option
+          >
+          <option value="Astro" selected={initialTag === "Astro"}>Astro</option>
+          <option value="API" selected={initialTag === "API"}>API</option>
+          <option value="CSS" selected={initialTag === "CSS"}>CSS</option>
+          <option value="JavaScript" selected={initialTag === "JavaScript"}
+            >JavaScript</option
+          >
+          <option value="Web Scraping" selected={initialTag === "Web Scraping"}
+            >Web Scraping</option
+          >
+          <option value="Database" selected={initialTag === "Database"}
+            >Database</option
+          >
+          <option value="Performance" selected={initialTag === "Performance"}
+            >Performance</option
+          >
+        </select>
+      </div>
+
+      <!-- FIXED: Better button styling and accessibility -->
+      <button
+        type="submit"
+        class="btn-primary text-sm font-medium whitespace-nowrap"
+        aria-label="Search projects"
+      >
+        <span class="sm:hidden">Search</span>
+        <span class="hidden sm:inline">Search Projects</span>
+      </button>
+    </div>
+
+    <!-- ADDED: Status filter -->
+    <div class="flex flex-wrap gap-2">
+      <input type="hidden" name="status" value="" />
+      <fieldset class="flex flex-wrap gap-2">
+        <legend class="sr-only">Filter by project status</legend>
+
+        <label class="inline-flex items-center">
+          <input
+            type="radio"
+            name="status"
+            value=""
+            checked={!Astro.url.searchParams.get("status")}
+            class="sr-only peer"
+          />
+          <span
+            class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-700 rounded-full cursor-pointer transition-colors peer-checked:bg-blue-100 peer-checked:text-blue-700 hover:bg-gray-200"
+          >
+            All Projects
+          </span>
+        </label>
+
+        <label class="inline-flex items-center">
+          <input
+            type="radio"
+            name="status"
+            value="active"
+            checked={Astro.url.searchParams.get("status") === "active"}
+            class="sr-only peer"
+          />
+          <span
+            class="px-3 py-1 text-xs font-medium bg-green-100 text-green-700 rounded-full cursor-pointer transition-colors peer-checked:bg-green-200 hover:bg-green-200"
+          >
+            Active
+          </span>
+        </label>
+
+        <label class="inline-flex items-center">
+          <input
+            type="radio"
+            name="status"
+            value="sunset"
+            checked={Astro.url.searchParams.get("status") === "sunset"}
+            class="sr-only peer"
+          />
+          <span
+            class="px-3 py-1 text-xs font-medium bg-orange-100 text-orange-700 rounded-full cursor-pointer transition-colors peer-checked:bg-orange-200 hover:bg-orange-200"
+          >
+            Sunset
+          </span>
+        </label>
+
+        <label class="inline-flex items-center">
+          <input
+            type="radio"
+            name="status"
+            value="archived"
+            checked={Astro.url.searchParams.get("status") === "archived"}
+            class="sr-only peer"
+          />
+          <span
+            class="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded-full cursor-pointer transition-colors peer-checked:bg-gray-200 hover:bg-gray-200"
+          >
+            Archived
+          </span>
+        </label>
+      </fieldset>
+    </div>
+  </form>
+
+  <!-- ADDED: Search results summary -->
+  {
+    (initialQuery || initialTag || Astro.url.searchParams.get("status")) && (
+      <div class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+        <p>
+          {initialQuery && (
+            <span>
+              Searching for "
+              <strong class="text-gray-900 dark:text-gray-100">
+                {initialQuery}
+              </strong>
+              "
+            </span>
+          )}
+          {initialTag && (
+            <span>
+              {" "}
+              in{" "}
+              <strong class="text-gray-900 dark:text-gray-100">
+                {initialTag}
+              </strong>
+            </span>
+          )}
+          {Astro.url.searchParams.get("status") && (
+            <span>
+              {" "}
+              • Status:{" "}
+              <strong class="text-gray-900 dark:text-gray-100">
+                {Astro.url.searchParams.get("status")}
+              </strong>
+            </span>
+          )}
+        </p>
+        <a
+          href="/learnt"
+          class="text-blue-600 dark:text-blue-400 hover:underline"
+        >
+          Clear filters
+        </a>
+      </div>
+    )
+  }
+</div>
+
+<!-- ADDED: Client-side enhancements for better UX -->
+<script>
+  // FIXED: Progressive enhancement - works without JS, enhanced with JS
+  document.addEventListener("DOMContentLoaded", function () {
+    const form = document.querySelector("form");
+    const searchInput = document.getElementById("search-input");
+
+    if (!form || !searchInput) return;
+
+    // ADDED: Auto-submit on tag/status change for better UX
+    const selects = form.querySelectorAll('select, input[type="radio"]');
+    selects.forEach((element) => {
+      element.addEventListener("change", () => {
+        // Small delay to show the selection change
+        setTimeout(() => form.submit(), 100);
+      });
+    });
+
+    // ADDED: Search as you type (debounced)
+    let timeoutId;
+    searchInput.addEventListener("input", function () {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        if (this.value.length >= 3 || this.value.length === 0) {
+          form.submit();
+        }
+      }, 500); // 500ms debounce
+    });
+
+    // ADDED: Clear search shortcut
+    searchInput.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") {
+        this.value = "";
+        form.submit();
+      }
+    });
+  });
+</script>

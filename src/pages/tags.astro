@@ -1,0 +1,23 @@
+---
+title: Tags;
+import { getAllTags } from "../data/projects";
+const tags = getAllTags();
+---
+
+<main class="container mx-auto px-4 py-16 max-w-3xl">
+  <h1 class="text-4xl font-bold mb-8">All Tags</h1>
+  <ul class="flex flex-wrap gap-3">
+    {
+      tags.map((tag) => (
+        <li>
+          <a
+            href={`/learnt?tag=${encodeURIComponent(tag)}`}
+            class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200 dark:hover:bg-blue-800 transition"
+          >
+            {tag}
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</main>

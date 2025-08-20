@@ -1,0 +1,298 @@
+---
+import Layout from "../layouts/Layout.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import SearchBar from "../components/SearchBar.astro";
+import {
+  searchProjects,
+  getActiveProjects,
+  getSunsetProjects,
+} from "../data/projects";
+
+// FIXED: Better URL parameter handling with validation and fallback
+let url;
+if (typeof Astro !== "undefined" && Astro.url && Astro.url.searchParams) {
+  url = Astro.url;
+} else {
+  url = new URL("http://localhost:4321/learnt");
+}
+const query = url.searchParams.get("q")?.trim() || "";
+const tag = url.searchParams.get("tag")?.trim() || "";
+const status = url.searchParams.get("status")?.trim() || "";
+
+// FIXED: Use the proper search function from data layer
+let projects = searchProjects(query, tag);
+
+// ADDED: Filter by status if specified
+if (status && ["active", "sunset", "archived"].includes(status)) {
+  projects = projects.filter((p) => p.status === status);
+}
+
+// ADDED: Sort projects (active first, then by date created)
+projects.sort((a, b) => {
+  // Active projects first
+  if (a.status === "active" && b.status !== "active") return -1;
+  if (b.status === "active" && a.status !== "active") return 1;
+
+  // Then by date created (newest first)
+  const dateA = new Date(a.dateCreated || "2020-01-01");
+  const dateB = new Date(b.dateCreated || "2020-01-01");
+  return dateB.getTime() - dateA.getTime();
+});
+
+// ADDED: Stats for the page
+const totalProjects = projects.length;
+const activeCount = projects.filter((p) => p.status === "active").length;
+const sunsetCount = projects.filter((p) => p.status === "sunset").length;
+
+// ADDED: Build search result description
+let searchDescription = "";
+if (query) {
+  searchDescription += `"${query}"`;
+}
+if (tag) {
+  searchDescription += searchDescription ? ` in ${tag}` : tag;
+}
+if (status) {
+  searchDescription += searchDescription
+    ? ` • ${status} projects`
+    : `${status} projects`;
+}
+
+// ADDED: Dynamic page title and meta description
+const pageTitle = searchDescription
+  ? `${searchDescription} - Learnt Projects`
+  : "Learnt Projects - Educational Development Archive";
+
+const metaDescription = searchDescription
+  ? `${totalProjects} projects found for ${searchDescription} in my learning journey.`
+  : `Browse ${totalProjects} educational projects documenting my learning journey, experiments, and skill development.`;
+---
+
+<Layout title={pageTitle} description={metaDescription}>
+  <div class="container mx-auto px-4 py-8">
+    <!-- FIXED: Better hero section with improved typography -->
+    <header class="text-center max-w-4xl mx-auto mb-12">
+      <h1
+        class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4 tracking-tight"
+      >
+        Educational Graveyard
+      </h1>
+      <p
+        class="text-lg md:text-xl text-gray-600 dark:text-gray-300 leading-relaxed mb-6"
+      >
+        A chronicle of experimental learning projects — documenting what I
+        built, how I learned, key takeaways, and when projects reached their
+        natural sunset.
+      </p>
+
+      <!-- ADDED: Stats overview -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-md mx-auto mb-8">
+        <div
+          class="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800"
+        >
+          <div class="text-2xl font-bold text-green-700 dark:text-green-400">
+            {activeCount}
+          </div>
+          <div class="text-sm text-green-600 dark:text-green-300">Active</div>
+        </div>
+        <div
+          class="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800"
+        >
+          <div class="text-2xl font-bold text-orange-700 dark:text-orange-400">
+            {sunsetCount}
+          </div>
+          <div class="text-sm text-orange-600 dark:text-orange-300">Sunset</div>
+        </div>
+        <div
+          class="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
+        >
+          <div class="text-2xl font-bold text-blue-700 dark:text-blue-400">
+            {totalProjects}
+          </div>
+          <div class="text-sm text-blue-600 dark:text-blue-300">Total</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- FIXED: Use the proper SearchBar component -->
+    <SearchBar initialQuery={query} initialTag={tag} className="mb-8" />
+
+    <!-- ADDED: Search results summary -->
+    {
+      (query || tag || status) && (
+        <div class="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="text-sm text-blue-800 dark:text-blue-200">
+              <strong>{totalProjects}</strong> project
+              {totalProjects !== 1 ? "s" : ""} found
+              {searchDescription && (
+                <span>
+                  {" "}
+                  for <strong>{searchDescription}</strong>
+                </span>
+              )}
+            </div>
+            <a
+              href="/learnt"
+              class="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-medium"
+            >
+              Clear all filters
+            </a>
+          </div>
+        </div>
+      )
+    }
+
+    <!-- ADDED: No results state -->
+    {
+      totalProjects === 0 && (
+        <div class="text-center py-16">
+          <div class="mx-auto w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mb-6">
+            <svg
+              class="w-12 h-12 text-gray-400 dark:text-gray-600"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </div>
+          <h2 class="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+            No projects found
+          </h2>
+          <p class="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
+            {searchDescription
+              ? `No projects match your search for "${searchDescription}". Try adjusting your filters or search terms.`
+              : "No projects match your current filters."}
+          </p>
+          <a href="/learnt" class="btn-primary inline-flex items-center gap-2">
+            <svg
+              class="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+            View All Projects
+          </a>
+        </div>
+      )
+    }
+
+    <!-- FIXED: Better project grid with responsive design -->
+    {
+      totalProjects > 0 && (
+        <section
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          role="region"
+          aria-label="Project list"
+        >
+          {projects.map((project, index) => (
+            <ProjectCard
+              project={project}
+              size={
+                index === 0 && !query && !tag && !status
+                  ? "featured"
+                  : "default"
+              }
+            />
+          ))}
+        </section>
+      )
+    }
+
+    <!-- ADDED: Load more button for large result sets -->
+    {
+      totalProjects > 12 && (
+        <div class="text-center mt-12">
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+            Showing first 12 of {totalProjects} projects
+          </p>
+          <button id="load-more" class="btn-secondary" data-page="1">
+            Load More Projects
+          </button>
+        </div>
+      )
+    }
+
+    <!-- ADDED: Quick navigation -->
+    <nav
+      class="mt-16 pt-8 border-t border-gray-200 dark:border-gray-700"
+      aria-label="Quick filters"
+    >
+      <h2
+        class="text-lg font-semibold text-gray-900 dark:text-white mb-4 text-center"
+      >
+        Explore by Category
+      </h2>
+      <div class="flex flex-wrap justify-center gap-3">
+        <a href="/learnt?tag=React" class="btn-secondary text-sm"
+          >React Projects</a
+        >
+        <a href="/learnt?tag=Node.js" class="btn-secondary text-sm"
+          >Backend Projects</a
+        >
+        <a href="/learnt?tag=API" class="btn-secondary text-sm">API Projects</a>
+        <a href="/learnt?tag=CSS" class="btn-secondary text-sm"
+          >CSS Experiments</a
+        >
+        <a href="/learnt?tag=Web%20Scraping" class="btn-secondary text-sm"
+          >Scraping Projects</a
+        >
+        <a href="/learnt?status=sunset" class="btn-secondary text-sm"
+          >Sunset Stories</a
+        >
+      </div>
+    </nav>
+  </div>
+</Layout>
+
+<!-- ADDED: Client-side enhancements -->
+<script>
+  // ADDED: Load more functionality (progressive enhancement)
+  document.addEventListener("DOMContentLoaded", function () {
+    const loadMoreBtn = document.getElementById("load-more");
+    if (!loadMoreBtn) return;
+
+    let currentPage = 1;
+    const itemsPerPage = 12;
+
+    loadMoreBtn.addEventListener("click", async function () {
+      // This is a placeholder - in a real app you'd fetch more data
+      // For now, just hide the button since we're showing all projects
+      loadMoreBtn.style.display = "none";
+    });
+  });
+
+  // ADDED: Keyboard shortcuts
+  document.addEventListener("keydown", function (e) {
+    // Focus search on '/' key
+    if (e.key === "/" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const searchInput = document.getElementById("search-input");
+      if (searchInput && document.activeElement !== searchInput) {
+        e.preventDefault();
+        searchInput.focus();
+      }
+    }
+
+    // Clear search on Escape when search is focused
+    if (e.key === "Escape" && document.activeElement?.id === "search-input") {
+      const searchInput = document.activeElement as HTMLInputElement;
+      if (searchInput.value) {
+        searchInput.value = "";
+        searchInput.form?.submit();
+      }
+    }
+  });
+</script>

@@ -1,0 +1,35 @@
+---
+export interface Props {
+  total: number;
+  active: number;
+  sunset: number;
+}
+const { total = 0, active = 0, sunset = 0 } = Astro.props;
+---
+
+<div class="flex gap-4 mb-6">
+  <div
+    class="p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 text-center"
+  >
+    <div class="text-lg font-bold text-green-700 dark:text-green-400">
+      {active}
+    </div>
+    <div class="text-xs text-green-600 dark:text-green-300">Active</div>
+  </div>
+  <div
+    class="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800 text-center"
+  >
+    <div class="text-lg font-bold text-orange-700 dark:text-orange-400">
+      {sunset}
+    </div>
+    <div class="text-xs text-orange-600 dark:text-orange-300">Sunset</div>
+  </div>
+  <div
+    class="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 text-center"
+  >
+    <div class="text-lg font-bold text-blue-700 dark:text-blue-400">
+      {total}
+    </div>
+    <div class="text-xs text-blue-600 dark:text-blue-300">Total</div>
+  </div>
+</div>

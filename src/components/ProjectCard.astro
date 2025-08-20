@@ -1,0 +1,193 @@
+---
+import type { Project } from "../data/projects";
+
+export interface Props {
+  project: Project;
+  showStatus?: boolean;
+  size?: 'default' | 'compact' | 'featured';
+}
+
+const {
+  project,
+  showStatus = true,
+  size = 'default'
+} = Astro.props;
+
+// ADDED: Better fallback handling for images
+const screenshot = project.screenshot || "/images/placeholder-project.png";
+const altText = project.altText || `Screenshot of ${project.name} project`;
+
+// ADDED: Status styling
+const statusStyles = {
+  active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+  sunset: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
+  archived: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
+};
+
+// ADDED: Difficulty styling
+const difficultyStyles = {
+  beginner: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+  intermediate: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
+  advanced: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+};
+
+// ADDED: Size variations
+const sizeClasses = {
+  compact: 'p-4',
+  default: 'p-5',
+  featured: 'p-6'
+};
+
+const imageSizes = {
+  compact: 'aspect-video min-h-[120px] max-h-[160px]',
+  default: 'aspect-video min-h-[180px] max-h-[240px]',
+  featured: 'aspect-video min-h-[200px] max-h-[280px]'
+};
+---
+
+<article
+  class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl overflow-hidden shadow-sm hover:shadow-lg dark:shadow-gray-900/25 transition-all duration-300 hover:scale-[1.02] hover:border-gray-300 dark:hover:border-gray-600"
+>
+  <!-- FIXED: Better image handling and accessibility -->
+  <a href={`/learnt/${project.slug}`} class="block relative overflow-hidden">
+    <img
+      src={screenshot}
+      alt={altText}
+      class={`w-full object-cover transition-transform duration-300 group-hover:scale-105 bg-gray-100 dark:bg-gray-700 ${imageSizes[size]}`}
+      loading="lazy"
+      decoding="async"
+      onerror="this.src='/images/placeholder-project.png'; this.onerror=null;"
+    />
+
+    <!-- ADDED: Status and difficulty badges overlay -->
+    <div class="absolute top-3 left-3 flex gap-2">
+      {showStatus && (
+        <span class={`px-2 py-1 text-xs font-medium rounded-full ${statusStyles[project.status]} backdrop-blur-sm`}>
+          {project.status}
+        </span>
+      )}
+      {project.difficulty && (
+        <span class={`px-2 py-1 text-xs font-medium rounded-full ${difficultyStyles[project.difficulty]} backdrop-blur-sm`}>
+          {project.difficulty}
+        </span>
+      )}
+    </div>
+
+    <!-- ADDED: Hover overlay for better UX -->
+    <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 flex items-center justify-center opacity-0 group-hover:opacity-100">
+      <span class="text-white bg-black/50 px-3 py-1 rounded-lg text-sm font-medium backdrop-blur-sm">
+        View Details
+      </span>
+    </div>
+  </a>
+
+  <!-- FIXED: Better content layout and typography -->
+  <div class={`flex flex-col gap-3 ${sizeClasses[size]}`}>
+    <!-- FIXED: Better title with proper hover state -->
+    <header>
+      <h3 class="text-xl font-semibold text-gray-900 dark:text-white leading-tight">
+        <a
+          href={`/learnt/${project.slug}`}
+          class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-200 focus:outline-none focus:text-blue-600 dark:focus:text-blue-400"
+        >
+          {project.name}
+        </a>
+      </h3>
+
+      <!-- ADDED: Date created if available -->
+      {project.dateCreated && (
+        <time
+          datetime={project.dateCreated}
+          class="text-xs text-gray-500 dark:text-gray-400 mt-1 block"
+        >
+          Created {new Date(project.dateCreated).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short'
+          })}
+        </time>
+      )}
+    </header>
+
+    <!-- FIXED: Better description with proper line height -->
+    <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-3">
+      {project.short}
+    </p>
+
+    <!-- FIXED: Improved tags layout with better interaction -->
+    <div class="flex flex-wrap gap-2">
+      {project.tags.slice(0, size === 'compact' ? 3 : 5).map((tag) => (
+        <a
+          href={`/learnt?tag=${encodeURIComponent(tag)}`}
+          class="inline-block text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+          aria-label={`Filter projects by ${tag}`}
+        >
+          {tag}
+        </a>
+      ))}
+      {project.tags.length > (size === 'compact' ? 3 : 5) && (
+        <span class="text-xs text-gray-500 dark:text-gray-400 px-2 py-1">
+          +{project.tags.length - (size === 'compact' ? 3 : 5)} more
+        </span>
+      )}
+    </div>
+
+    <!-- ADDED: Skills learned section -->
+    {size !== 'compact' && project.learned.length > 0 && (
+      <div class="text-xs text-gray-500 dark:text-gray-400">
+        <span class="font-medium">Learned:</span>{' '}
+        {project.learned.slice(0, 3).join(', ')}
+        {project.learned.length > 3 && '...'}
+      </div>
+    )}
+
+    <!-- FIXED: Better action buttons with improved accessibility -->
+    <div class="flex items-center justify-between gap-3 mt-auto pt-2">
+      <a
+        href={project.github}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn-secondary text-xs flex items-center gap-2 flex-1 justify-center"
+        aria-label={`View ${project.name} source code on GitHub`}
+      >
+        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+          <path fill-rule="evenodd" d="M10 0C4.477 0 0 4.484 0 10.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0110 4.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.203 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.942.359.31.678.921.678 1.856 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0020 10.017C20 4.484 15.522 0 10 0z" clip-rule="evenodd"></path>
+        </svg>
+        GitHub
+      </a>
+
+      <a
+        href={`/learnt/${project.slug}`}
+        class="btn-primary text-xs flex-1 text-center"
+        aria-label={`Read more about ${project.name}`}
+      >
+        Learn More
+      </a>
+    </div>
+
+    <!-- FIXED: Better sunset date handling -->
+    {project.sunsetDate && project.status === 'sunset' && (
+      <div class="flex items-center gap-2 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+        <svg class="w-4 h-4 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        </svg>
+        <p class="text-xs text-orange-600 dark:text-orange-400">
+          Sunset on {new Date(project.sunsetDate).toLocaleDateString("en-US", {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+          })}
+        </p>
+      </div>
+    )}
+  </div>
+</article>
+
+<!-- ADDED: CSS for line clamping -->
+<style>
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

@@ -1,22 +1,242 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
-		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-		<meta name="generator" content={Astro.generator} />
-		<title>Astro Basics</title>
-	</head>
-	<body>
-		<slot />
-	</body>
-</html>
+---
+// FIXED: Better prop handling with defaults and types
+export interface Props {
+  title?: string;
+  description?: string;
+  image?: string;
+  canonical?: string;
+}
 
-<style>
-	html,
-	body {
-		margin: 0;
-		width: 100%;
-		height: 100%;
-	}
-</style>
+import "../styles/global.css";
+
+const {
+  title = "Learnt - Educational Project Archive",
+  description = "A chronicle of experimental learning projects, documenting what I built, how I learned, and when projects were sunset.",
+  image = "/og-image.png",
+  canonical
+} = Astro.props;
+
+// ADDED: Better SEO and meta tag management
+const canonicalUrl = canonical || new URL(Astro.url.pathname, Astro.site);
+---
+
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- ADDED: Comprehensive meta tags -->
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+
+    <!-- ADDED: Open Graph meta tags -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={image} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:type" content="website" />
+
+    <!-- ADDED: Twitter Card meta tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={image} />
+
+    <!-- ADDED: Favicon and theme -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="theme-color" content="#0ea5e9" />
+
+    <!-- ADDED: Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body class="bg-white text-gray-800 dark:bg-gray-900 dark:text-gray-100 font-sans antialiased">
+    <!-- FIXED: Improved header with better navigation -->
+    <header class="sticky top-0 z-40 w-full border-b border-gray-200 dark:border-gray-800 bg-white/95 dark:bg-gray-900/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+      <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between h-16">
+          <!-- FIXED: Better logo with proper linking -->
+          <a
+            href="/"
+            class="font-bold text-xl text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            aria-label="Go to homepage"
+          >
+            Learnt
+          </a>
+
+          <!-- FIXED: Proper navigation with meaningful links -->
+          <nav class="flex items-center space-x-6">
+            <a
+              href="/learnt"
+              class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              Projects
+            </a>
+            <a
+              href="/about"
+              class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              About
+            </a>
+            <a
+              href="/contact"
+              class="text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              Contact
+            </a>
+
+            <!-- FIXED: Improved dark mode toggle with better accessibility -->
+            <button
+              id="dark-toggle"
+              aria-label="Toggle dark mode"
+              class="p-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <span id="dark-icon" class="block w-5 h-5 text-center">🌙</span>
+            </button>
+          </nav>
+        </div>
+      </div>
+    </header>
+
+    <!-- ADDED: Main content wrapper with proper spacing -->
+    <main class="min-h-screen">
+      <slot />
+    </main>
+
+    <!-- FIXED: Improved footer with actual content -->
+    <footer class="border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+      <div class="container mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <!-- About section -->
+          <div>
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-3">About Learnt</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+              A collection of learning projects, experiments, and explorations. Each project tells a story of discovery, challenges overcome, and lessons learned.
+            </p>
+          </div>
+
+          <!-- Links section -->
+          <div>
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Links</h3>
+            <ul class="space-y-2">
+              <li>
+                <a href="/learnt" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                  All Projects
+                </a>
+              </li>
+              <li>
+                <a href="/learnt?status=active" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                  Active Projects
+                </a>
+              </li>
+              <li>
+                <a href="/learnt?status=sunset" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                  Sunset Projects
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Contact section -->
+          <div>
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-3">Connect</h3>
+            <div class="flex space-x-4">
+              <a
+                href="https://github.com/yourname"
+                class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                aria-label="GitHub Profile"
+              >
+                GitHub
+              </a>
+              <a
+                href="https://linkedin.com/in/yourname"
+                class="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+                aria-label="LinkedIn Profile"
+              >
+                LinkedIn
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700 text-center">
+          <p class="text-sm text-gray-500 dark:text-gray-400">
+            © {new Date().getFullYear()} Learnt. Built with Astro and hosted on Netlify.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- FIXED: Improved dark mode script with better error handling -->
+    <script is:inline>
+      (function() {
+        // FIXED: More robust dark mode implementation
+        const toggle = document.getElementById("dark-toggle");
+        const icon = document.getElementById("dark-icon");
+        const html = document.documentElement;
+
+        if (!toggle || !icon) return;
+
+        function setDarkMode(isDark) {
+          try {
+            if (isDark) {
+              html.classList.add("dark");
+              icon.textContent = "☀️";
+              localStorage.setItem("theme", "dark");
+            } else {
+              html.classList.remove("dark");
+              icon.textContent = "🌙";
+              localStorage.setItem("theme", "light");
+            }
+          } catch (error) {
+            console.warn("Could not save theme preference:", error);
+          }
+        }
+
+        // ADDED: Better initial theme detection
+        function getInitialTheme() {
+          try {
+            const saved = localStorage.getItem("theme");
+            if (saved === "dark" || saved === "light") {
+              return saved === "dark";
+            }
+          } catch (error) {
+            console.warn("Could not read theme preference:", error);
+          }
+
+          // Fall back to system preference
+          return window.matchMedia("(prefers-color-scheme: dark)").matches;
+        }
+
+        // Initialize theme
+        setDarkMode(getInitialTheme());
+
+        // ADDED: Listen for system theme changes
+        window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+          try {
+            if (!localStorage.getItem("theme")) {
+              setDarkMode(e.matches);
+            }
+          } catch (error) {
+            console.warn("Could not respond to system theme change:", error);
+          }
+        });
+
+        // Handle toggle clicks
+        toggle.addEventListener("click", () => {
+          setDarkMode(!html.classList.contains("dark"));
+        });
+
+        // ADDED: Keyboard support for toggle
+        toggle.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setDarkMode(!html.classList.contains("dark"));
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

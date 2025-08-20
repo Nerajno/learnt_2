@@ -1,0 +1,42 @@
+---
+import TagList from "./TagList.astro";
+export interface Props {
+  project: any;
+}
+const { project } = Astro.props;
+---
+
+---
+
+<article class="prose dark:prose-invert max-w-2xl mx-auto">
+  <h1 class="text-3xl font-bold mb-2">{project.name}</h1>
+  <p class="text-gray-600 dark:text-gray-400 mb-4">{project.short}</p>
+  <img
+    src={project.screenshot}
+    alt={project.altText || project.name}
+    class="rounded mb-6"
+  />
+  <div class="mb-4">
+    <strong>Status:</strong>
+    {project.status}
+    <br />
+    <strong>Difficulty:</strong>
+    {project.difficulty || "N/A"}
+    <br />
+    <strong>Tags:</strong>
+    <TagList tags={project.tags} />
+  </div>
+  <div class="mb-4">
+    <strong>What I Learned:</strong>
+    <ul>
+      {project.learned.map((item) => <li>{item}</li>)}
+    </ul>
+  </div>
+  <div class="mb-4">
+    <strong>Description:</strong>
+    <div set:html={project.long} />
+  </div>
+  <a href={project.github} class="btn-primary" target="_blank" rel="noopener"
+    >View on GitHub</a
+  >
+</article>

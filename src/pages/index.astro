@@ -1,11 +1,283 @@
 ---
-import Welcome from '../components/Welcome.astro';
-import Layout from '../layouts/Layout.astro';
+// FIXED: Create a proper homepage instead of just importing learnt.astro
+import Layout from "../layouts/Layout.astro";
+import ProjectCard from "../components/ProjectCard.astro";
+import { getActiveProjects, getSunsetProjects, projects } from '../data/projects';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+// ADDED: Get featured projects for homepage
+const activeProjects = getActiveProjects().slice(0, 3);
+const recentSunsets = getSunsetProjects().slice(0, 2);
+const totalProjects = projects.length;
+const totalActiveProjects = getActiveProjects().length;
+const totalSunsetProjects = getSunsetProjects().length;
+
+// ADDED: Get some interesting stats
+const allTags = projects.flatMap(p => p.tags);
+const uniqueTags = [...new Set(allTags)];
+const topTags = uniqueTags
+  .map(tag => ({
+    tag,
+    count: allTags.filter(t => t === tag).length
+  }))
+  .sort((a, b) => b.count - a.count)
+  .slice(0, 5);
 ---
 
-<Layout>
-	<Welcome />
+<Layout
+  title="Learnt - Educational Project Archive & Learning Journey"
+  description="Welcome to my educational graveyard - a chronicle of learning projects, experiments, and the stories behind what I built, learned, and when projects reached their natural sunset."
+>
+  <!-- Hero Section -->
+  <section class="relative bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/20 py-20 md:py-32 overflow-hidden">
+    <!-- Background decoration -->
+    <div class="absolute inset-0 bg-grid-pattern opacity-5 dark:opacity-10" aria-hidden="true"></div>
+
+    <div class="container mx-auto px-4 text-center relative">
+      <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight">
+        <span class="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400 bg-clip-text text-transparent">
+          Learnt
+        </span>
+      </h1>
+      <p class="text-xl md:text-2xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
+        An educational graveyard documenting my learning journey through
+        <strong class="text-gray-900 dark:text-white">{totalProjects} projects</strong>,
+        experiments, and the stories behind what worked, what didn't, and what I learned along the way.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+        <a
+          href="/learnt"
+          class="btn-primary text-lg px-8 py-3 inline-flex items-center gap-2"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          Browse All Projects
+        </a>
+        <a
+          href="/learnt?status=sunset"
+          class="btn-secondary text-lg px-8 py-3 inline-flex items-center gap-2"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg>
+          Sunset Stories
+        </a>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-2xl mx-auto">
+        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg">
+          <div class="text-3xl font-bold text-green-600 dark:text-green-400 mb-2">{totalActiveProjects}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">Active Projects</div>
+          <div class="text-xs text-gray-500 dark:text-gray-500 mt-1">Currently maintained</div>
+        </div>
+        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg">
+          <div class="text-3xl font-bold text-orange-600 dark:text-orange-400 mb-2">{totalSunsetProjects}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">Sunset Projects</div>
+          <div class="text-xs text-gray-500 dark:text-gray-500 mt-1">Completed learning goals</div>
+        </div>
+        <div class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-200 dark:border-gray-700 rounded-xl p-6 shadow-lg">
+          <div class="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-2">{uniqueTags.length}</div>
+          <div class="text-sm text-gray-600 dark:text-gray-400">Technologies</div>
+          <div class="text-xs text-gray-500 dark:text-gray-500 mt-1">Explored and documented</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Active Projects -->
+  {activeProjects.length > 0 && (
+    <section class="py-16 bg-white dark:bg-gray-900">
+      <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Currently Active
+          </h2>
+          <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Projects that are actively maintained, evolved, or serving their intended purpose in my current workflow.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+          {activeProjects.map((project, index) => (
+            <ProjectCard
+              project={project}
+              size={index === 0 ? 'featured' : 'default'}
+            />
+          ))}
+        </div>
+
+        <div class="text-center mt-8">
+          <a
+            href="/learnt?status=active"
+            class="btn-secondary inline-flex items-center gap-2"
+          >
+            View All Active Projects
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Learning Philosophy -->
+  <section class="py-16 bg-gray-50 dark:bg-gray-800/50">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
+          The Philosophy
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Build to Learn</h3>
+            <p class="text-gray-600 dark:text-gray-300">
+              Every project starts with a learning goal. Whether it's mastering a new framework or exploring an architectural pattern.
+            </p>
+          </div>
+
+          <div class="text-center">
+            <div class="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Document Everything</h3>
+            <p class="text-gray-600 dark:text-gray-300">
+              Capture what worked, what didn't, and most importantly, what was learned. Future me (and others) will thank present me.
+            </p>
+          </div>
+
+          <div class="text-center">
+            <div class="w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg class="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+              </svg>
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">Embrace Sunsets</h3>
+            <p class="text-gray-600 dark:text-gray-300">
+              Not every project needs to live forever. Sometimes the learning is complete, and it's time to let it rest gracefully.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recent Sunsets -->
+  {recentSunsets.length > 0 && (
+    <section class="py-16 bg-white dark:bg-gray-900">
+      <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+          <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Recent Sunsets
+          </h2>
+          <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Projects that have completed their learning journey and been gracefully retired, along with the stories of what made them sunset-worthy.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {recentSunsets.map((project) => (
+            <ProjectCard project={project} />
+          ))}
+        </div>
+
+        <div class="text-center mt-8">
+          <a
+            href="/learnt?status=sunset"
+            class="btn-secondary inline-flex items-center gap-2"
+          >
+            Read All Sunset Stories
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <!-- Popular Technologies -->
+  <section class="py-16 bg-gray-50 dark:bg-gray-800/50">
+    <div class="container mx-auto px-4">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          Technologies Explored
+        </h2>
+        <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          The tools, frameworks, and technologies that have been part of this learning journey.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap justify-center gap-4 max-w-4xl mx-auto">
+        {topTags.map(({ tag, count }) => (
+          <a
+            href={`/learnt?tag=${encodeURIComponent(tag)}`}
+            class="group bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl px-6 py-4 hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-200 hover:scale-105 hover:shadow-lg"
+          >
+            <div class="text-center">
+              <div class="text-xl font-bold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                {tag}
+              </div>
+              <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {count} project{count !== 1 ? 's' : ''}
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+
+      <div class="text-center mt-8">
+        <a
+          href="/learnt"
+          class="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 font-medium inline-flex items-center gap-2"
+        >
+          Explore all technologies
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Call to Action -->
+  <section class="py-16 bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-800 dark:to-indigo-800">
+    <div class="container mx-auto px-4 text-center">
+      <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">
+        Ready to Explore?
+      </h2>
+      <p class="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+        Dive into the full archive of projects, experiments, and learning stories. Filter by technology, status, or simply browse chronologically.
+      </p>
+      <a
+        href="/learnt"
+        class="inline-flex items-center gap-2 bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold text-lg hover:bg-gray-50 transition-colors duration-200 shadow-lg hover:shadow-xl"
+      >
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 012-2m0 0V5a2 2 0 012 2v2M7 7h10" />
+        </svg>
+        Browse All Projects
+      </a>
+    </div>
+  </section>
 </Layout>
+
+<!-- Background pattern CSS -->
+<style>
+  .bg-grid-pattern {
+    background-image:
+      linear-gradient(rgba(0, 0, 0, 0.1) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.1) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+</style>
